@@ -195,12 +195,6 @@
         "no-shadow-restricted-names": "error",
         "no-spaced-func": "error",
         "no-sync": "off",
-        "no-tabs": [
-            "error",
-            {
-                "allowIndentationTabs": true
-            }
-        ],
         "no-template-curly-in-string": "error",
         "no-ternary": "off",
         "no-throw-literal": "off",

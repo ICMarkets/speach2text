@@ -1,36 +1,41 @@
 const
     fs = require('fs'),
-    html = fs.readFileSync(require('path').join(__dirname, 'index.html'), 'utf8'),
-    bundle_js = fs.readFileSync(require('path').join(__dirname, 'bundle.js'), 'utf8'),
-    worker_js = fs.readFileSync(require('path').join(__dirname, 'worker.js'), 'utf8'),
-    protocol_js = fs.readFileSync(require('path').join(__dirname, 'protocol.js'), 'utf8'),
-    localforage_min_js = fs.readFileSync(require('path').join(__dirname, 'localforage.min.js'), 'utf8'),
-    style_css = fs.readFileSync(require('path').join(__dirname, 'style.css'), 'utf8'),
+    html = () => fs.readFileSync(require('path').join(__dirname, 'index.html'), 'utf8'),
+    client_js = () => fs.readFileSync(require('path').join(__dirname, 'client.js'), 'utf8'),
+    worker_js = () => fs.readFileSync(require('path').join(__dirname, 'worker.js'), 'utf8'),
+    search_js = () => fs.readFileSync(require('path').join(__dirname, 'search.js'), 'utf8'),
+    protocol_js = () => fs.readFileSync(require('path').join(__dirname, 'protocol.js'), 'utf8'),
+    localforage_min_js = () => fs.readFileSync(require('path').join(__dirname, 'localforage.min.js'), 'utf8'),
+    style_css = () => fs.readFileSync(require('path').join(__dirname, 'style.css'), 'utf8'),
     url = require('url'),
     router = {
         '/': (req, res) => {
             res.writeHead(200, {'Content-Type': 'text/html'})
-            res.end(html)
+            res.end(html())
         },
-        '/bundle.js': (req, res) => {
+        '/client.js': (req, res) => {
             res.writeHead(200, {'Content-Type': 'text/javascript'})
-            res.end(bundle_js)
+            res.end(client_js())
         },
         '/worker.js': (req, res) => {
             res.writeHead(200, {'Content-Type': 'text/javascript'})
-            res.end(worker_js)
+            res.end(worker_js())
+        },
+        '/search.js': (req, res) => {
+            res.writeHead(200, {'Content-Type': 'text/javascript'})
+            res.end(search_js())
         },
         '/protocol.js': (req, res) => {
             res.writeHead(200, {'Content-Type': 'text/javascript'})
-            res.end(protocol_js)
+            res.end(protocol_js())
         },
         '/style.css': (req, res) => {
             res.writeHead(200, {'Content-Type': 'text/css'})
-            res.end(style_css)
+            res.end(style_css())
         },
         '/localforage.min.js': (req, res) => {
             res.writeHead(200, {'Content-Type': 'text/javascript'})
-            res.end(localforage_min_js)
+            res.end(localforage_min_js())
         },
         '/health': (req, res) => {
             res.writeHead(200, {'Content-Type': 'text/plain'})

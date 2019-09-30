@@ -1,17 +1,5 @@
 /*global view edit input_search checkbox_view protocol STORAGE_NAME caption _load_file _note*/
 const
-    domready = require('domready'),
-    countries = {
-        //model: require('./model/countries'),//was moved to WebWorker
-        view: require('./view/countries')
-    },
-    customer = {
-        model: require('./model/customer'),
-        view: require('./view/customer').view
-    },
-    validation = require('./validation'),
-    CUSTOMER = require('./view/customer').enum,
-    NEW_CUSTOMER = require('./view/new_customer').enum,
     // Few enums for access to view children (one of other ways is create API to manage it inside view, but I desided to keep view as simple as possible)
     NAV = {
         VIEW: 0,
@@ -39,16 +27,17 @@ const
         }
     }
 
-protocol.set_worker(new Worker('src/worker.js', {name: STORAGE_NAME}))
+protocol.set_worker(new Worker('worker.js', {name: STORAGE_NAME}))
 
-Promise.all([// here is startup speedup:
-    new Promise(protocol.on_load),// 1st CPU load state from IndexedDB
-    new Promise(domready) // 2nd CPU load DOM
-]).then(([state]) => {
+new Promise(protocol.on_load).then(state => {
     // Show all customers form cached state
     state.records = state.records || []
     state.records
-        .map(customer.view)
+        .map(function record_view (record) {
+            var view = document.createElement('div')
+            view.textContent = 'text record' + (typeof record)
+            return view
+        })
         .reduce(
             (container, customer_view) => {
                 container.appendChild(customer_view)

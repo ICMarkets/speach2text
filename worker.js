@@ -18,7 +18,6 @@ const
         return state
     },
     STATE = String('state-' + Date.now()),
-    COUNTRIES_PUBLIC_LINK = 'https://restcountries.eu/rest/v2/all',
     save = state => {
         self[STATE] = state
         return localforage.setItem(DB_KEY.STATE, JSON.stringify(state))
@@ -39,21 +38,23 @@ let
 function send (_) {
     ws && ws.readyState === 1 && ws.send(_)
 }
-function connection (url, on_chains) {
+function connection (url, onmessage) {
     const
-        reconnect = () => setTimeout(() => connection(url, on_chains), 5000)
-    try {
-        load().then(state => ws = new WebSocket(url, String(state.length)))
-    } catch (e) {
-        return reconnect();
-    }
-    ws.onclose = reconnect
-    ws.onerror = () => ws.close()
-    ws.onmessage = ({data}) => on_chains(data)
+        reconnect = () => setTimeout(() => connection(url, onmessage), 5000)
+
+    load()
+        .then(state => new WebSocket(url, String(state.length)))
+        .then(ws => {
+            ws.onclose = reconnect
+            ws.onerror = () => ws.close()
+            ws.onmessage = ({data}) => onmessage(data)
+        })
+        .catch(() => reconnect())
+
 }
 
 
-connection('ws://localhost:3333')
+connection('ws://localhost:8080/ws', () => null)
 
 localforage.ready(() =>
     localforage.getItem(DB_KEY.STATE)
@@ -85,13 +86,12 @@ onmessage = protocol
     .on_create_customer(({file, note}) => {
 
 
-            send()
+            send(JSON.stringify({file, note}))
 
 
-            state.customers[id] = customer
-            insert_doc(state.trie, create_doc(customer.email, customer2search_payload(customer), id))
-            save(state)
-        })
+            //state.customers[id] = customer
+            //insert_doc(state.trie, create_doc(customer.email, customer2search_payload(customer), id))
+            //save(state)
     })
     .on_update_customer(({id, customer}) => {
         load().then(state => {

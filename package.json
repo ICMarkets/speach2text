@@ -4,7 +4,6 @@
   "description": "8x8 speach to seachable text",
   "main": "index.js",
   "scripts": {
-    "b": "browserify src/controller.js -o bundle.js",
     "dev": "node index",
     "start": "node index",
     "lint": "eslint src --ignore-pattern localforage.min.js --ignore-pattern src/search.js"

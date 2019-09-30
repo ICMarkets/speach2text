@@ -24,6 +24,7 @@ module.exports.start_ws_server = () =>
             handshake(req, {
                 consumer: offset =>
                     wss.handleUpgrade(req, socket, head, ws => {
+                        const consumer = create_socket_send(ws)
                         ws.onclose = () => consumers.del(consumer)
                         ws.onerror = () => ws.close()
                         ws.onmessage = ({data}) => {
