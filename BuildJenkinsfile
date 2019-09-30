@@ -1,0 +1,262 @@
+#!groovy
+
+import java.text.SimpleDateFormat
+
+/*
+* Jenkins shared library
+*/
+@Library('utils@v1.0.1') _
+@Library('ecs-jenkins-lib@v1.0.0') ecs
+@Library('DevOps') ops
+
+
+def killAllJobsWithSameParams() {
+    def currentJobName = env.JOB_NAME
+    def currentBuildNum = env.BUILD_NUMBER.toInteger()
+    def job = Jenkins.instance.getItemByFullName(currentJobName)
+    for (build in job.builds) {
+        if (!build.isBuilding()) {
+            continue;
+        }
+        if (currentBuildNum == build.getNumber().toInteger()) {
+            continue;
+        }
+
+        log.info("OLD_BRANCH ${build.environment["BRANCH"]} ::: ${env.BRANCH}")
+
+        if (build.environment["BRANCH"] == env.BRANCH) {
+            log.info("Aborting build: ${build}")
+            build.doStop()
+        }
+    }
+}
+
+def GIT_COMMIT_ID = ""
+
+pipeline {
+    agent any
+
+    // Pipeline options
+    options {
+        timeout(time: 1, unit: 'HOURS')
+        ansiColor('xterm')
+    }
+
+    // Environment specific parameters to be used throughout the pipeline
+    environment {
+
+        boolean IS_PR = "${"${params.ghprbPullId}"?.trim() != "null"}"
+
+        // Application specific parameters
+        APPLICATION = "www2"
+        ENVIRONMENT = "dev"
+        BRANCH = "${"${env.IS_PR}" == "true" ? "${env.ghprbSourceBranch}" : "${params.BRANCH}"}"
+        VERSION = "${env.BRANCH}-${new SimpleDateFormat("yyyy-MM-dd-HHmmss").format(new Date())}"
+
+        // Github specific parameters
+        REPO_URL = "https://github.com/ICMarkets/WWW2.git"
+
+        // Docker hub specific parameters
+        DOCKER_HUB_REPO_ENDPOINT = "naryanjoshi/icm"
+        DOCKER_HUB_CREDENTIAL = "naryanjoshi-docker-hub"
+    }
+
+    // Pipeline Stages
+    stages {
+
+        // Kill other jobs
+        stage('Kill other jobs') {
+            steps {
+                script {
+                    log.info("Executing Stage 1: Kill other jobs having same parameters")
+
+                    /* Logic starts here */
+
+                    killAllJobsWithSameParams()
+
+                    /* Logic ends here */
+
+                    log.info("Completed Stage 1: Kill other jobs")
+                }
+            }
+        }
+
+        // Sleep for 15 seconds
+        stage('Sleep for 15 seconds') {
+            steps {
+                script {
+                    log.info("Executing Stage 2: Going to sleep for 15 seconds")
+
+                    /* Logic starts here */
+
+                    sleep 15
+
+                    /* Logic ends here */
+
+                    log.info("Completed Stage 2: Awake from sleep now...")
+
+                }
+            }
+        }
+
+        // Clean Jenkins workspace
+        stage('Clean workspace') {
+            steps {
+                script {
+                    log.info("Executing Stage 3: Clean workspace")
+
+                    /* Logic starts here */
+
+                    cleanWs()
+
+                    /* Logic ends here */
+
+                    log.success("Completed Stage 3: Clean workspace")
+                }
+            }
+        }
+
+        // Checkout code from Github
+        stage('Code checkout') {
+            steps {
+                script {
+                    log.info("Executing Stage 4: Code checkout")
+                    log.info("Getting pull of ${env.BRANCH} from WWW2 repository.")
+
+                    /* Logic starts here */
+
+                    git branch: "${env.BRANCH}", changelog: false, credentialsId: "${env.ICM_GITHUB_CRED_ID}", poll: false, url: "${env.REPO_URL}"
+
+                    GIT_COMMIT_ID = "${helper.gitShortCommit()}"
+
+                    /* Logic ends here */
+
+                    log.info("Fetched latest code from ${env.BRANCH} of WWW2 repository.")
+                    log.success("Completed Stage 4: Code checkout")
+                }
+            }
+        }
+
+        // Build docker image and push to AWS ECR repo with latest pointing to current build tag
+        stage('Docker build AWS ECR') {
+            steps {
+                script {
+                    log.info("Executing Stage 5: Docker build AWS ECR")
+                    log.info("Creating docker image for ECR (global)")
+
+                    /* Logic starts here */
+
+                    def tag = "${env.VERSION}-${GIT_COMMIT_ID}"
+
+                    // Build arguments based on PR
+                    buildArgs = "--build-arg COMMIT=${GIT_COMMIT_ID} --build-arg CI_BRANCH=${env.BRANCH} "
+                    if ("${env.IS_PR}" == "true") {
+                        buildArgs += "--build-arg PULL_REQUEST=${env.ghprbPullId}"
+                    }
+
+                    // Build and push docker image
+                    IMAGENAME = "${env.ICM_ECR_REPO_URL}/${env.APPLICATION}"
+                    docker.withRegistry("https://${env.ICM_ECR_REPO_URL}", "${env.ICM_IAM_ROLE}") {
+                        image = docker.build("${IMAGENAME}", "${buildArgs} .")
+                        docker.image("${IMAGENAME}").push("${tag}")
+                    }
+
+                    /* Logic ends here */
+
+                    log.info("Pushed docker image ${tag}")
+                    log.success("Completed Stage 5: Docker build AWS ECR")
+                }
+            }
+        }
+
+        // Build docker image and push to Docker hub repo with latest pointing to current build tag
+        stage('Docker build Docker Hub') {
+            steps {
+                script {
+                    log.info("Executing Stage 6: Docker build Docker Hub")
+                    log.info("Creating docker image for Docker hub (china + russia)")
+
+                    /* Logic starts here */
+
+                    def tag = "${env.VERSION}-${GIT_COMMIT_ID}"
+
+                    // Build arguments based on PR
+                    buildArgs = "--build-arg COMMIT=${GIT_COMMIT_ID} --build-arg CI_BRANCH=${env.BRANCH} "
+                    if ("${env.IS_PR}" == "true") {
+                        buildArgs += "--build-arg PULL_REQUEST=${env.ghprbPullId}"
+                    }
+
+                    // Build and push docker image
+                    IMAGENAME = "${env.DOCKER_HUB_REPO_ENDPOINT}"
+                    withDockerRegistry(credentialsId: "${env.DOCKER_HUB_CREDENTIAL}") {
+                        image = docker.build("${IMAGENAME}", "${buildArgs} .")
+                        docker.image("${IMAGENAME}").push("${env.APPLICATION}_${tag}")
+                        docker.image("${IMAGENAME}").push("${env.APPLICATION}_${env.ENVIRONMENT}-latest")
+                    }
+
+                    /* Logic ends here */
+
+                    log.info("Pushed docker image ${tag}")
+                    log.success("Completed Stage 6: Docker build Docker Hub")
+                }
+
+            }
+        }
+
+        // Check if Dev Needs to be deployed
+//        stage('Check PR and Deploy Dev') {
+//            steps {
+//                script {
+//                    log.info("Executing Stage 7: Checking if it's PR than deploy to Dev")
+//
+//                    /* Logic starts here */
+//
+//                    if ("${env.IS_PR}" == "true") {
+//                        def tag = "${env.VERSION}-${GIT_COMMIT_ID}"
+//                        log.info("It's a PR, Starting the Dev deploy now.")
+//
+//                        helper.notifySlack("good", "Starting WWW2-DEPLOY job for branch: ${env.BRANCH}")
+//
+//                        build job: 'WWW2-DEPLOY', propagate: false, wait: false, parameters: [string(name: 'ENVIRONMENT', value: "${env.ENVIRONMENT}"), string(name: 'PLATFORM', value: 'GLOBAL'), string(name: 'TAG', value: "${tag}")]
+//                    } else {
+//                        log.info("Not a PR triggered job, skipping the Dev deploy now.")
+//                    }
+//
+//                    /* Logic ends here */
+//
+//                    log.success("Completed Stage 7: Completed successfully")
+//                }
+//            }
+//        }
+    }
+
+    // Post actions
+    post {
+        aborted {
+            script {
+                log.info("###############################")
+                log.info('Build process is aborted')
+                helper.notifySlack("warning", "Job: ${env.JOB_NAME} with buildnumber ${env.BUILD_NUMBER} was aborted.")
+                log.info("###############################")
+            }
+        }
+        failure {
+            script {
+                log.error("#############################")
+                log.error('Build process failed.')
+                helper.notifySlack("danger", "Job: ${env.JOB_NAME} with buildnumber ${env.BUILD_NUMBER} was failed.")
+                log.error("#############################")
+            }
+        }
+        success {
+            script {
+                log.success("*************************************************")
+                log.success("Tag: ${env.VERSION}-${GIT_COMMIT_ID}")
+                log.success("*************************************************")
+                helper.notifySlack("good", "Job: ${env.JOB_NAME} with buildnumber ${env.BUILD_NUMBER} was successful.")
+                log.success('Build process completed successfully.')
+                log.success("#################################################")
+            }
+        }
+    }
+}
