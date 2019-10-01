@@ -48,13 +48,13 @@ pipeline {
         boolean IS_PR = "${"${params.ghprbPullId}"?.trim() != "null"}"
 
         // Application specific parameters
-        APPLICATION = "www2"
+        APPLICATION = "speach2text"
         ENVIRONMENT = "dev"
         BRANCH = "${"${env.IS_PR}" == "true" ? "${env.ghprbSourceBranch}" : "${params.BRANCH}"}"
         VERSION = "${env.BRANCH}-${new SimpleDateFormat("yyyy-MM-dd-HHmmss").format(new Date())}"
 
         // Github specific parameters
-        REPO_URL = "https://github.com/ICMarkets/WWW2.git"
+        REPO_URL = "https://github.com/ICMarkets/speach2text.git"
 
         // Docker hub specific parameters
         DOCKER_HUB_REPO_ENDPOINT = "naryanjoshi/icm"
@@ -121,7 +121,7 @@ pipeline {
             steps {
                 script {
                     log.info("Executing Stage 4: Code checkout")
-                    log.info("Getting pull of ${env.BRANCH} from WWW2 repository.")
+                    log.info("Getting pull of ${env.BRANCH} from speach2text repository.")
 
                     /* Logic starts here */
 
@@ -131,7 +131,7 @@ pipeline {
 
                     /* Logic ends here */
 
-                    log.info("Fetched latest code from ${env.BRANCH} of WWW2 repository.")
+                    log.info("Fetched latest code from ${env.BRANCH} of speach2text repository.")
                     log.success("Completed Stage 4: Code checkout")
                 }
             }
@@ -169,65 +169,6 @@ pipeline {
             }
         }
 
-        // Build docker image and push to Docker hub repo with latest pointing to current build tag
-        stage('Docker build Docker Hub') {
-            steps {
-                script {
-                    log.info("Executing Stage 6: Docker build Docker Hub")
-                    log.info("Creating docker image for Docker hub (china + russia)")
-
-                    /* Logic starts here */
-
-                    def tag = "${env.VERSION}-${GIT_COMMIT_ID}"
-
-                    // Build arguments based on PR
-                    buildArgs = "--build-arg COMMIT=${GIT_COMMIT_ID} --build-arg CI_BRANCH=${env.BRANCH} "
-                    if ("${env.IS_PR}" == "true") {
-                        buildArgs += "--build-arg PULL_REQUEST=${env.ghprbPullId}"
-                    }
-
-                    // Build and push docker image
-                    IMAGENAME = "${env.DOCKER_HUB_REPO_ENDPOINT}"
-                    withDockerRegistry(credentialsId: "${env.DOCKER_HUB_CREDENTIAL}") {
-                        image = docker.build("${IMAGENAME}", "${buildArgs} .")
-                        docker.image("${IMAGENAME}").push("${env.APPLICATION}_${tag}")
-                        docker.image("${IMAGENAME}").push("${env.APPLICATION}_${env.ENVIRONMENT}-latest")
-                    }
-
-                    /* Logic ends here */
-
-                    log.info("Pushed docker image ${tag}")
-                    log.success("Completed Stage 6: Docker build Docker Hub")
-                }
-
-            }
-        }
-
-        // Check if Dev Needs to be deployed
-//        stage('Check PR and Deploy Dev') {
-//            steps {
-//                script {
-//                    log.info("Executing Stage 7: Checking if it's PR than deploy to Dev")
-//
-//                    /* Logic starts here */
-//
-//                    if ("${env.IS_PR}" == "true") {
-//                        def tag = "${env.VERSION}-${GIT_COMMIT_ID}"
-//                        log.info("It's a PR, Starting the Dev deploy now.")
-//
-//                        helper.notifySlack("good", "Starting WWW2-DEPLOY job for branch: ${env.BRANCH}")
-//
-//                        build job: 'WWW2-DEPLOY', propagate: false, wait: false, parameters: [string(name: 'ENVIRONMENT', value: "${env.ENVIRONMENT}"), string(name: 'PLATFORM', value: 'GLOBAL'), string(name: 'TAG', value: "${tag}")]
-//                    } else {
-//                        log.info("Not a PR triggered job, skipping the Dev deploy now.")
-//                    }
-//
-//                    /* Logic ends here */
-//
-//                    log.success("Completed Stage 7: Completed successfully")
-//                }
-//            }
-//        }
     }
 
     // Post actions
