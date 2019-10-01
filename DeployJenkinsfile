@@ -102,7 +102,7 @@ pipeline {
                             log.info("New branch setup: Creating task definition now")
 
                             def isTaskDefCreated = registerTaskDefinition(taskFamily, taskName,
-                                    128, "${env.ECS_IMAGE_TO_DEPLOY}", "speach2text", 9001, "${env.ICM_AWS_DEFAULT_REGION}")
+                                    128, "${env.ECS_IMAGE_TO_DEPLOY}", "speach2text", 8080, "${env.ICM_AWS_DEFAULT_REGION}")
 
                             if (isTaskDefCreated != 0) {
                                 currentBuild.result = 'FAILED'
