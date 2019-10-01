@@ -1,0 +1,30 @@
+{
+  "name": "speach2text",
+  "version": "1.0.0",
+  "description": "8x8 speach to seachable text",
+  "main": "index.js",
+  "scripts": {
+    "dev": "node index",
+    "start": "node index",
+    "lint": "eslint src --ignore-pattern localforage.min.js --ignore-pattern src/search.js"
+  },
+  "keywords": [
+    "test"
+  ],
+  "author": "spirin.vladimir@gmail.com",
+  "license": "ISC",
+  "dependencies": {
+    "beefy": "2.1.8",
+    "domready": "1.0.8",
+    "mocha": "^6.2.1",
+    "msgpack-lite": "^0.1.26",
+    "node-fetch": "^2.6.0",
+    "redis": "^2.8.0",
+    "ws": "^7.1.2"
+  },
+  "devDependencies": {
+    "browserify": "16.3.0",
+    "eslint": "6.0.1",
+    "watchify": "3.11.1"
+  }
+}
