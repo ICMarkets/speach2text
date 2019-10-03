@@ -16,7 +16,7 @@ def registerTaskDefinition(taskFamily, taskName, memoryReservation, redisHost, i
                                                      "memoryReservation": ${memoryReservation}, \
                                                      "logConfiguration": {"logDriver": "fluentd", "options": {"tag": "${tag}"}}, \
                                                      "portMappings":[{"containerPort":${containerPort}, "protocol":"tcp"}], \
-                                                     "environment": [{"name": "REDIS_DB_HOST","value": "${redisHost}"},{"name": "REDIS_DB_PORT","value": "6379"}"}]}]' \
+                                                     "environment": [{"name": "REDIS_DB_HOST","value": "${redisHost}"},{"name": "REDIS_DB_PORT","value": "6379"}]}]' \
                                                       --region "${region}"
                         """)
 }
