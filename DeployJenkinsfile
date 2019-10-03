@@ -13,10 +13,8 @@ def registerTaskDefinition(taskFamily, taskName, memoryReservation, redisHost, i
                             --family ${taskFamily} \
                             --container-definitions '[{"name":"${taskName}", \
                                                     "image":"${image}", \
-                                                     "memoryReservation": ${memoryReservation},"environment":[{"name":"REDIS_DB_HOST", "value": "${redisHost}", \
-                                                    "logConfiguration": {"logDriver": "fluentd", "options": {"tag": "${tag}"}}, \
-                                                    "portMappings":[{"containerPort":${containerPort}, "protocol":"tcp"}]}]' \
-                            --region "${region}"
+                                                     "memoryReservation": ${memoryReservation},"environment":[{"name":"REDIS_DB_HOST", "value": "${redisHost}","logConfiguration": {"logDriver": "fluentd", "options": {"tag": "${tag}"}},"portMappings":[{"containerPort":${containerPort}, "protocol":"tcp"}]}]' --region "${region}"
+                            
                         """)
 }
 
