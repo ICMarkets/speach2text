@@ -27,6 +27,8 @@ pipeline {
     // Parameters to be passed
     parameters {
         choice(name: 'ENVIRONMENT', choices: ['dev'], description: 'Choose an environment.')
+        choice(name: 'REDIS_HOST', choices: ['dev-registration-redis.icmarkets.com'], description: 'Choose redis host.')
+
     }
 
     // Pipeline options
