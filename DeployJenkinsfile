@@ -7,13 +7,14 @@
 @Library('ecs-jenkins-lib@v1.0.0') awsECS
 @Library('DevOps') ops
 
-def registerTaskDefinition(taskFamily, taskName, memoryReservation, image, tag, containerPort, region) {
+def registerTaskDefinition(taskFamily, taskName, memoryReservation, redisHost, image, tag, containerPort, region) {
     return sh(returnStatus: true, script: """
                             /usr/local/bin/aws ecs register-task-definition --network-mode bridge \
                             --family ${taskFamily} \
                             --container-definitions '[{"name":"${taskName}", \
                                                     "image":"${image}", \
                                                      "memoryReservation": ${memoryReservation}, \
+                                                     "environment":[{"name":"REDIS_DB_HOST", "value": ${redisHost}, \
                                                     "logConfiguration": {"logDriver": "fluentd", "options": {"tag": "${tag}"}}, \
                                                     "portMappings":[{"containerPort":${containerPort}, "protocol":"tcp"}]}]' \
                             --region "${region}"
@@ -54,7 +55,7 @@ pipeline {
         VPC = "vpc-bb8321d3"
         ALB_HTTP_LISTENER_ARN = "arn:aws:elasticloadbalancing:eu-west-2:466803351965:listener/app/icm-dev-lb/02aa38573ac93bed/2c8b1efb4e0c4dc2"
         ALB_HTTPS_LISTENER_ARN = "arn:aws:elasticloadbalancing:eu-west-2:466803351965:listener/app/icm-dev-lb/02aa38573ac93bed/f777b76b6ff73aae"
-        SITE_HOST = "${env.ENVIRONMENT}-speach2text-${env.BRANCH}.internal.icmarkets.com".toLowerCase()
+        SITE_HOST = "${env.ENVIRONMENT}-speach2text.icmarkets.com".toLowerCase()
         TARGET_GROUP = "icm-${env.ENVIRONMENT}-speach2text-${env.BRANCH}"
     }
 
@@ -102,7 +103,7 @@ pipeline {
                             log.info("New branch setup: Creating task definition now")
 
                             def isTaskDefCreated = registerTaskDefinition(taskFamily, taskName,
-                                    128, "${env.ECS_IMAGE_TO_DEPLOY}", "speach2text", 8080, "${env.ICM_AWS_DEFAULT_REGION}")
+                                    128,"${params.REDIS_HOST}", "${env.ECS_IMAGE_TO_DEPLOY}", "speach2text", 8080, "${env.ICM_AWS_DEFAULT_REGION}")
 
                             if (isTaskDefCreated != 0) {
                                 currentBuild.result = 'FAILED'
@@ -152,7 +153,7 @@ pipeline {
                             log.info("Creating service now.")
 
                             def isServiceCreated = awsHelper.createECSService(service, "${env.CLUSTER_NAME}", taskFamily,
-                                    1, "${tgArn}", taskName, 9001, "${env.ICM_AWS_DEFAULT_REGION}")
+                                    1, "${tgArn}", taskName, 8080, "${env.ICM_AWS_DEFAULT_REGION}")
 
                             if (isServiceCreated != 0) {
                                 currentBuild.result = 'FAILED'
