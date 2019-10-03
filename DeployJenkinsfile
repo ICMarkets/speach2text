@@ -57,8 +57,8 @@ pipeline {
         VPC = "vpc-bb8321d3"
         ALB_HTTP_LISTENER_ARN = "arn:aws:elasticloadbalancing:eu-west-2:466803351965:listener/app/icm-dev-lb/02aa38573ac93bed/2c8b1efb4e0c4dc2"
         ALB_HTTPS_LISTENER_ARN = "arn:aws:elasticloadbalancing:eu-west-2:466803351965:listener/app/icm-dev-lb/02aa38573ac93bed/f777b76b6ff73aae"
-        SITE_HOST = "${env.ENVIRONMENT}-speech2text.icmarkets.com".toLowerCase()
-        TARGET_GROUP = "icm-${env.ENVIRONMENT}-speech2text-${env.BRANCH}"
+        SITE_HOST = "${env.ENVIRONMENT}-speach2text.icmarkets.com".toLowerCase()
+        TARGET_GROUP = "icm-${env.ENVIRONMENT}-speach2text-${env.BRANCH}"
     }
 
     // Pipeline Stages
