@@ -8,6 +8,8 @@ _dialog.onclick = () => _dialog.classList.remove('opened')
 protocol.set_worker(new Worker('worker.js'))
 
 protocol.on_load_record(record => {
+    submit.setAttribute('disabled', '')
+
     const
         id = records.length,
         container = document.createElement('div'),
@@ -77,6 +79,7 @@ submit.onclick = add_new_record
 
 
 function add_new_record () {
+    submit.setAttribute('disabled', true)
     Array.prototype.forEach.call(_load_file.files, file => {
         const reader = new FileReader()
         reader.onload = e => protocol.create_record({file: e.target.result, note: _note.value})

@@ -14,7 +14,7 @@ const
     },
     load = () =>
         self[STATE]
-            ? console.log(self[STATE]) || Promise.resolve(self[STATE])
+            ? Promise.resolve(self[STATE])
             : localforage.getItem(DB_KEY).then(_ =>
                 _
                     ? msgpack.decode(_)
