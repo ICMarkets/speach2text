@@ -5,7 +5,7 @@ importScripts('protocol.js')
 importScripts('search.js')
 
 const
-    WS_URL = 'ws://localhost:8080/ws',
+    WS_URL = location.protocol.replace('http', 'ws') + '//' + location.host + '/ws',
     DB_KEY = '8x8-records',
     STATE = 'state',
     save = state => {
