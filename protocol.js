@@ -1,16 +1,15 @@
-/*global protocol*/
+/*global protocol msgpack*/
 const
-    encode = _ => JSON.stringify(_),
-    decode = _ => JSON.parse(_),
+    encode = _ => msgpack.encode(_),
+    decode = _ => msgpack.decode(_),
     API = {},
     CREATE = 'create',
-    UPDATE = 'update',
     DELETE = 'delete',
     LOAD = 'load',
     SEARCH_REQUEST = 'search_request',
     SEARCH_RESPONSE = 'search_response',
-    ACTIVATE_VIEW = 'activate_view',
-    ACTIVATE_EDIT = 'activate_edit'
+    AUDIO_REQUEST = 'AUDIO_REQUEST',
+    AUDIO_RESPONSE = 'AUDIO_RESPONSE'
 
 let
     worker
@@ -21,37 +20,39 @@ protocol = {
         worker = _
         worker.onmessage = protocol.onmessage
     },
-    on_load: _ => {API.on_load = _;return protocol},
-    on_create_customer: _ => {API.on_create_customer = _;return protocol},
-    on_update_customer: _ => {API.on_update_customer = _;return protocol},
-    on_delete_customer: _ => {API.on_delete_customer = _;return protocol},
+    on_load_record: _ => {API.on_load_record = _;return protocol},
+    on_create_record: _ => {API.on_create_record = _;return protocol},
+    on_delete_record: _ => {API.on_delete_record = _;return protocol},
     on_search_request: _ => {API.on_search_request = _;return protocol},
     on_search_response: _ => {API.on_search_response = _;return protocol},
-    on_activate_view: _ => {API.on_activate_view = _;return protocol},
-    on_activate_edit: _ => {API.on_activate_edit = _;return protocol},
-    load: payload => postMessage(encode({type: LOAD, payload})),
-    create_customer: payload => worker.postMessage(encode({type: CREATE, payload})),
-    update_customer: payload => worker.postMessage(encode({type: UPDATE, payload})),
-    delete_customer: payload => worker.postMessage(encode({type: DELETE, payload})),
-    search_request: payload => worker.postMessage(encode({type: SEARCH_REQUEST, payload})),
-    search_response: payload => postMessage(encode({type: SEARCH_RESPONSE, payload})),
-    activate_view: payload => worker.postMessage(encode({type: ACTIVATE_VIEW, payload})),
-    activate_edit: payload => worker.postMessage(encode({type: ACTIVATE_EDIT, payload})),
+    on_audio_request: _ => {API.on_audio_request = _;return protocol},
+    on_audio_response: _ => {API.on_audio_response = _;return protocol},
+    load_record: payload =>
+        postMessage(encode({type: LOAD, payload})),
+    create_record: payload =>
+        worker.postMessage(encode({type: CREATE, payload})),
+    delete_record: payload =>
+        worker.postMessage(encode({type: DELETE, payload})),
+    search_request: payload =>
+        worker.postMessage(encode({type: SEARCH_REQUEST, payload})),
+    search_response: payload =>
+        postMessage(encode({type: SEARCH_RESPONSE, payload})),
+    audio_request: payload =>
+        worker.postMessage(encode({type: AUDIO_REQUEST, payload})),
+    audio_response: payload =>
+        postMessage(encode({type: AUDIO_RESPONSE, payload})),
     onmessage: ({data}) => {
         const
             decoded = decode(data)
         switch (decoded.type) {
             case CREATE:
-                API.on_create_customer(decoded.payload)
-                break;
-            case UPDATE:
-                API.on_update_customer(decoded.payload)
+                API.on_create_record(decoded.payload)
                 break;
             case DELETE:
-                API.on_delete_customer(decoded.payload)
+                API.on_delete_record(decoded.payload)
                 break;
             case LOAD:
-                API.on_load(decoded.payload)
+                API.on_load_record(decoded.payload)
                 break;
             case SEARCH_REQUEST:
                 API.on_search_request(decoded.payload)
@@ -59,11 +60,11 @@ protocol = {
             case SEARCH_RESPONSE:
                 API.on_search_response(decoded.payload)
                 break;
-            case ACTIVATE_VIEW:
-                API.on_activate_view(decoded.payload)
+            case AUDIO_REQUEST:
+                API.on_audio_request(decoded.payload)
                 break;
-            case ACTIVATE_EDIT:
-                API.on_activate_edit(decoded.payload)
+            case AUDIO_RESPONSE:
+                API.on_audio_response(decoded.payload)
                 break;
             default:
         }

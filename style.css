@@ -22,7 +22,7 @@ body {
     width: 100%;
     transition: all 0.3s ease-in;
 }
-.customer {
+.record {
     height: 100px;
     margin: 20px 20px;
     position: relative;
@@ -32,143 +32,143 @@ body {
     flex-direction: row;
     justify-content: space-around;
 }
-.customer:hover {
+.record:hover {
     box-shadow: 0 0 1px;
     border-radius: 25px;
     background-color: rgba(253, 253, 253, 1)
 }
-.customer.hide {
+.record.hide {
     display: none;
 }
 
-.customer .revert {
+.record .revert {
     display: none;
     order: 7;
 }
-.customer.edit .revert {
+.record.edit .revert {
     display: block;
 }
-.customer.edit .revert:hover {
+.record.edit .revert:hover {
     color: orange;
     cursor: pointer;
 }
-.customer .confirm {
+.record .confirm {
     display: none;
     order: 6;
 }
-.customer.edit .confirm {
+.record.edit .confirm {
     display: block;
 }
-.customer.edit .confirm.disable {
+.record.edit .confirm.disable {
     pointer-events: none;
     opacity: 0.4;
 }
-.customer.edit .confirm:hover {
-    color: green;
+.record.edit .confirm:hover {
     cursor: pointer;
 }
-.customer .remove {
+.record .remove {
     display: none;
     order: 9;
 }
-.customer .remove:hover {
+.record .remove:hover {
     color: red;
     cursor: pointer;
 }
-.customer .edit:hover {
+.record .edit:hover {
     color: blue;
     cursor: pointer;
 }
-.customer .input-first-name {
+.record .input-first-name {
     display: none;
     order: 2;
 }
-.customer .first-name {
+.record .first-name {
     order: 2;
 }
-.customer.edit .input-first-name {
+.record.edit .input-first-name {
     display: block;
 }
-.customer.edit .input-first-name.error {
+.record.edit .input-first-name.error {
     border-color: red;
 }
-.customer.edit .first-name {
+.record.edit .first-name {
     display: none;
 }
-.customer .input-last-name {
+.record .input-last-name {
     display: none;
     order: 3;
 }
-.customer .last-name {
+.record .last-name {
     order: 3;
 }
-.customer.edit .input-last-name {
+.record.edit .input-last-name {
     display: block;
 }
-.customer.edit .input-last-name.error {
+.record.edit .input-last-name.error {
     border-color: red;
 }
-.customer.edit .last-name {
+.record.edit .last-name {
     display: none;
 }
-.customer .input-email {
+.record .input-email {
     display: none;
     order: 4;
 }
-.customer .email {
+.record .email {
     order: 4;
 }
-.customer.edit .input-email {
+.record.edit .input-email {
     display: block;
 }
-.customer.edit .input-email.error {
+.record.edit .input-email.error {
     border-color: red;
 }
-.customer.edit .email {
+.record.edit .email {
     display: none;
 }
-.customer .select-country {
+.record .select-country {
     display: none;
     order: 5;
 }
-.customer .country {
+.record .country {
     order: 5;
 }
-.customer.edit .select-country {
+.record.edit .select-country {
     display: block;
 }
-.customer.edit .select-country.error {
+.record.edit .select-country.error {
     border-color: red;
 }
-.customer.edit .country {
+.record.edit .country {
     display: none;
 }
-#view.edit .customer .remove {
+#view.edit .record .remove {
     display: block;
 }
-#view.edit .customer .edit {
+#view.edit .record .edit {
     display: block;
 }
-.customer .edit {
+.record .edit {
     display: none;
     order: 8;
 }
-.customer .face {
+.record .face {
     order: 1;
 }
 #edit {
     background-color: lightblue;
     margin-top: 3%;
-    display: none;
     position: relative;
     width: 100%;
     height: 10%;
+    display: flex;
     align-items: center;
+    justify-content: space-around;
 }
 #edit.active {
     display: flex;
 }
-#view.edit .customer .edit {
+#view.edit .record .edit {
     display: block;
 }
 #first-name, #last-name, #email {
@@ -182,7 +182,6 @@ body {
     border-color: red;
 }
 #submit {
-    font-size: 48px;
     margin: 30px 30px;
 }
 #submit.disable {
@@ -231,65 +230,6 @@ input[type=text]:focus {
 #countries:focus {
     outline: none;
 }
-.tgl {
-  display: none;
-}
-.tgl, .tgl:after, .tgl:before, .tgl *, .tgl *:after, .tgl *:before, .tgl + .tgl-btn {
-  box-sizing: border-box;
-}
-.tgl::-moz-selection, .tgl:after::-moz-selection, .tgl:before::-moz-selection, .tgl *::-moz-selection, .tgl *:after::-moz-selection, .tgl *:before::-moz-selection, .tgl + .tgl-btn::-moz-selection {
-  background: none;
-}
-.tgl::selection, .tgl:after::selection, .tgl:before::selection, .tgl *::selection, .tgl *:after::selection, .tgl *:before::selection, .tgl + .tgl-btn::selection {
-  background: none;
-}
-.tgl + .tgl-btn {
-  outline: 0;
-  display: block;
-  width: 4em;
-  height: 2em;
-  position: relative;
-  cursor: pointer;
-  -webkit-user-select: none;
-     -moz-user-select: none;
-      -ms-user-select: none;
-          user-select: none;
-}
-.tgl + .tgl-btn:after, .tgl + .tgl-btn:before {
-  position: relative;
-  display: block;
-  content: "";
-  width: 50%;
-  height: 100%;
-}
-.tgl + .tgl-btn:after {
-  left: 0;
-}
-.tgl + .tgl-btn:before {
-  display: none;
-}
-
-.tgl-flat + .tgl-btn {
-  padding: 2px;
-  transition: all .1s ease;
-  background: #fff;
-  border: 4px solid grey;
-  border-radius: 2em;
-}
-.tgl-flat + .tgl-btn:after {
-  transition: all .1s ease;
-  background: grey;
-  content: "";
-  border-radius: 1em;
-}
-.tgl-flat:checked + .tgl-btn {
-  border: 4px solid lightblue;
-}
-.tgl-flat:checked + .tgl-btn:after {
-  left: 50%;
-  background: lightblue;
-}
-
 
 #caption, #caption:hover {
     border-style: none !important;
@@ -325,4 +265,47 @@ input[type=text]:focus {
     width: 98%;
     height: 20%;
     font-size: small;
+}
+
+#_player_container {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    height: 10%;
+    left: 0;
+    background-color: lightblue;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+
+}
+
+#_dialog {
+    background-color: white;
+    position: relative;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+.speach {
+    margin: 20px 20px;
+    padding: 20px 20px;
+    border-radius: 10px;
+    border-style: dotted;
+    border-color: grey;
+}
+
+#_dialog.opened {
+    display: flex;
+}
+
+.note {
+    font-size: 18px;
+    font-weight: bold;
+    color: grey;
 }

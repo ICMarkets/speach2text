@@ -22,4 +22,4 @@ module.exports = cb =>
                     : init(cb)
         : init(cb)
 
-module.exports.RECORDS = 'RECORDS'
+module.exports.RECORDS = 'RECORDS3'

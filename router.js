@@ -6,6 +6,7 @@ const
     search_js = () => fs.readFileSync(require('path').join(__dirname, 'search.js'), 'utf8'),
     protocol_js = () => fs.readFileSync(require('path').join(__dirname, 'protocol.js'), 'utf8'),
     localforage_min_js = () => fs.readFileSync(require('path').join(__dirname, 'localforage.min.js'), 'utf8'),
+    msgpack_min_js = () => fs.readFileSync(require('path').join(__dirname, 'msgpack.min.js'), 'utf8'),
     style_css = () => fs.readFileSync(require('path').join(__dirname, 'style.css'), 'utf8'),
     url = require('url'),
     router = {
@@ -36,6 +37,10 @@ const
         '/localforage.min.js': (req, res) => {
             res.writeHead(200, {'Content-Type': 'text/javascript'})
             res.end(localforage_min_js())
+        },
+        '/msgpack.min.js': (req, res) => {
+            res.writeHead(200, {'Content-Type': 'text/javascript'})
+            res.end(msgpack_min_js())
         },
         '/health': (req, res) => {
             res.writeHead(200, {'Content-Type': 'text/plain'})

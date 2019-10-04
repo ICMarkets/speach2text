@@ -1,135 +1,112 @@
-/*global importScripts protocol localforage delete_doc create_doc insert_doc autosubmit create_trie*/
+/*global importScripts protocol localforage delete_doc create_doc insert_doc autosubmit create_trie msgpack*/
 importScripts('localforage.min.js')
+importScripts('msgpack.min.js')
 importScripts('protocol.js')
 importScripts('search.js')
-console.log(self.name)
+
 const
-    DB_KEY = {
-        STATE: self.name
-    },
-    NAV = {
-        VIEW: 0,
-        EDIT: 1
-    },
-    set_defaults_to_state = state => {
-        state.nav = 1
-        state.customers = [],
-        state.trie = create_trie()
-        return state
-    },
-    STATE = String('state-' + Date.now()),
+    WS_URL = 'ws://localhost:8080/ws',
+    DB_KEY = '8x8-records',
+    STATE = 'state',
     save = state => {
         self[STATE] = state
-        return localforage.setItem(DB_KEY.STATE, JSON.stringify(state))
+        return localforage.setItem(DB_KEY, msgpack.encode(state))
     },
     load = () =>
         self[STATE]
             ? console.log(self[STATE]) || Promise.resolve(self[STATE])
-            : localforage.getItem(DB_KEY.STATE).then(_ => JSON.parse(_)),
-    customer2search_payload = customer => [
-        customer.first_name,
-        customer.last_name,
-        customer.country
-    ].join(' ')
+            : localforage.getItem(DB_KEY).then(_ =>
+                _
+                    ? msgpack.decode(_)
+                    : {
+                        records: [],
+                        trie: create_trie()
+                      }
+            ),
+    record2search_payload = record =>
+        record.text.results.reduce(
+            (frase, speach) =>
+                frase + ' ' + speach.alternatives[0].transcript,
+            ''
+        )
 
 let
     ws
 
 function send (_) {
-    ws && ws.readyState === 1 && ws.send(_)
+    ws && ws.readyState === 1 && ws.send(msgpack.encode(_))
 }
-function connection (url, onmessage) {
+
+function connection (url, state, onrecord) {
     const
-        reconnect = () => setTimeout(() => connection(url, onmessage), 5000)
+        reconnect = () => setTimeout(() => connection(url, state, onrecord), 5000)
 
-    load()
-        .then(state => new WebSocket(url, String(state.length)))
-        .then(ws => {
-            ws.onclose = reconnect
-            ws.onerror = () => ws.close()
-            ws.onmessage = ({data}) => onmessage(data)
-        })
-        .catch(() => reconnect())
-
+    try {
+        ws = new WebSocket(url, String(state.records.length))
+        ws.onclose = reconnect
+        ws.onerror = () => ws.close()
+        ws.binaryType = 'arraybuffer'
+        ws.onmessage = ({data}) => {
+            onrecord(msgpack.decode(new Uint8Array(data)))
+        }
+    } catch (e) {
+        reconnect()
+    }
 }
 
-
-connection('ws://localhost:8080/ws', () => null)
 
 localforage.ready(() =>
-    localforage.getItem(DB_KEY.STATE)
-        .then(raw_state =>
-            raw_state
-                ? JSON.parse(raw_state)
-                : fetch(COUNTRIES_PUBLIC_LINK)
-                        .then(r => r.ok ? r.json() : Promise.reject(new Error('can not load countries list from public API')))
-                        .then(countries => countries.map(country => country.name))
-                        .then(countries => {
-                            const
-                                state = set_defaults_to_state({countries})
-
-                            return save(state).then(() => state)
-                        })
+    load()
+        .then(state => {
+            state.records.forEach(record =>
+                protocol.load_record({
+                    text: record.text,
+                    note: record.note,
+                    time: record.time
+                })
+            )
+            return state
+        })
+        .then(state =>
+            connection(
+                WS_URL,
+                state,
+                record => {
+                    const id = state.records.length
+                    state.records.push(record)
+                    insert_doc(state.trie, create_doc(record.note, record2search_payload(record), id))
+                    save(state)
+                    protocol.load_record({
+                        text: record.text,
+                        note: record.note,
+                        time: record.time
+                    })
+                }
+            )
         )
-        .then(state =>//state at worker side is larger then state at main thread
-            Object({
-                //trie: state.trie, // search index is stored only at WebWorker side
-                nav: state.nav,
-                countries: state.countries,
-                customers: state.customers
-            })
-        )
-        .then(protocol.load)
 )
 
 onmessage = protocol
-    .on_create_customer(({file, note}) => {
-
-
-            send(JSON.stringify({file, note}))
-
-
-            //state.customers[id] = customer
-            //insert_doc(state.trie, create_doc(customer.email, customer2search_payload(customer), id))
-            //save(state)
-    })
-    .on_update_customer(({id, customer}) => {
+    .on_create_record(({file, note}) => send({file, note}))
+    .on_delete_record(id =>
         load().then(state => {
-            // delete whole customer form search index
-            delete_doc(state.trie, create_doc(state.customers[id].email, customer2search_payload(state.customers[id]), id))
-            // update customer with new data
-            state.customers[id].first_name = customer.first_name
-            state.customers[id].last_name = customer.last_name
-            state.customers[id].email = customer.email
-            state.customers[id].country = customer.country
-            // insert whole customer with updated data to search index
-            insert_doc(state.trie, create_doc(customer.email, customer2search_payload(customer), id))
+            const record = state.records[id]
+            state.records.splice(id, 1)
+            delete_doc(state.trie, create_doc(record.note, record2search_payload(record), id))
             save(state)
         })
-    })
-    .on_delete_customer(id => {
-        load().then(state => {
-            const customer = state.customers[id]
-            state.customers.splice(id, 1)
-            delete_doc(state.trie, create_doc(customer.email, customer2search_payload(customer), id))
-            save(state)
-        })
-    })
-    .on_activate_view(() => {
-        load().then(state => {
-            state.nav = NAV.VIEW
-            save(state)
-        })
-    })
-    .on_activate_edit(() => {
-        load().then(state => {
-            state.nav = NAV.EDIT
-            save(state)
-        })
-    })
-    .on_search_request(request => {
-        load().then(state => {
+    )
+    .on_search_request(request =>
+        load().then(state =>
             protocol.search_response(autosubmit(state.trie, request))
-        })
-    })
+        )
+    )
+    .on_audio_request(id =>
+        load().then(state =>
+            protocol.audio_response({
+                file: state.records[id].file,
+                id
+            })
+        )
+    )
     .onmessage
