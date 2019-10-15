@@ -14,14 +14,15 @@
   "author": "spirin.vladimir@gmail.com",
   "license": "ISC",
   "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "1.0.20",
     "arraybuffer-to-buffer": "0.0.7",
-    "beefy": "2.1.8",
-    "domready": "1.0.8",
-    "mocha": "^6.2.1",
-    "msgpack-lite": "^0.1.26",
-    "node-fetch": "^2.6.0",
-    "redis": "^2.8.0",
-    "ws": "^7.1.2"
+    "fluent-ffmpeg": "2.1.2",
+    "mocha": "6.2.1",
+    "msgpack-lite": "0.1.26",
+    "node-fetch": "2.6.0",
+    "redis": "2.8.0",
+    "streamifier": "0.1.1",
+    "ws": "7.1.2"
   },
   "devDependencies": {
     "browserify": "16.3.0",

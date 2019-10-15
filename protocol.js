@@ -7,9 +7,7 @@ const
     DELETE = 'delete',
     LOAD = 'load',
     SEARCH_REQUEST = 'search_request',
-    SEARCH_RESPONSE = 'search_response',
-    AUDIO_REQUEST = 'AUDIO_REQUEST',
-    AUDIO_RESPONSE = 'AUDIO_RESPONSE'
+    SEARCH_RESPONSE = 'search_response'
 
 let
     worker
@@ -25,8 +23,6 @@ protocol = {
     on_delete_record: _ => {API.on_delete_record = _;return protocol},
     on_search_request: _ => {API.on_search_request = _;return protocol},
     on_search_response: _ => {API.on_search_response = _;return protocol},
-    on_audio_request: _ => {API.on_audio_request = _;return protocol},
-    on_audio_response: _ => {API.on_audio_response = _;return protocol},
     load_record: payload =>
         postMessage(encode({type: LOAD, payload})),
     create_record: payload =>
@@ -37,10 +33,6 @@ protocol = {
         worker.postMessage(encode({type: SEARCH_REQUEST, payload})),
     search_response: payload =>
         postMessage(encode({type: SEARCH_RESPONSE, payload})),
-    audio_request: payload =>
-        worker.postMessage(encode({type: AUDIO_REQUEST, payload})),
-    audio_response: payload =>
-        postMessage(encode({type: AUDIO_RESPONSE, payload})),
     onmessage: ({data}) => {
         const
             decoded = decode(data)
@@ -59,12 +51,6 @@ protocol = {
                 break;
             case SEARCH_RESPONSE:
                 API.on_search_response(decoded.payload)
-                break;
-            case AUDIO_REQUEST:
-                API.on_audio_request(decoded.payload)
-                break;
-            case AUDIO_RESPONSE:
-                API.on_audio_response(decoded.payload)
                 break;
             default:
         }

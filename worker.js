@@ -5,6 +5,12 @@ importScripts('protocol.js')
 importScripts('search.js')
 
 const
+    enum_type = {
+        CREATE: 0,
+        CONVERTED: 1,
+        RECOGNIZED: 2,
+        DELETE: 3
+    },
     WS_URL = location.protocol.replace('http', 'ws') + '//' + location.host + '/ws',
     DB_KEY = '8x8-records',
     STATE = 'state',
@@ -19,7 +25,8 @@ const
                 _
                     ? msgpack.decode(_)
                     : {
-                        records: [],
+                        records: {},
+                        log: [],
                         trie: create_trie()
                       }
             ),
@@ -42,7 +49,7 @@ function connection (url, state, onrecord) {
         reconnect = () => setTimeout(() => connection(url, state, onrecord), 5000)
 
     try {
-        ws = new WebSocket(url, String(state.records.length))
+        ws = new WebSocket(url, String(Object.keys(state.records).length))
         ws.onclose = reconnect
         ws.onerror = () => ws.close()
         ws.binaryType = 'arraybuffer'
@@ -58,55 +65,79 @@ function connection (url, state, onrecord) {
 localforage.ready(() =>
     load()
         .then(state => {
-            state.records.forEach(record =>
-                protocol.load_record({
-                    text: record.text,
-                    note: record.note,
-                    time: record.time
-                })
-            )
+            state.log.forEach(protocol.load_record)
             return state
         })
         .then(state =>
             connection(
                 WS_URL,
                 state,
-                record => {
-                    const id = state.records.length
-                    state.records.push(record)
-                    insert_doc(state.trie, create_doc(record.note, record2search_payload(record), id))
+                commit => {
+                    const
+                        {type, payload} = commit,
+                        {id} = payload,
+                        {trie, records} = state
+
+                    records[id] = records[id] || {}
+
+                    const record = records[id]
+
+                    switch (type) {
+                        case enum_type.CREATE:
+                            record.id = id
+                            record.note = payload.note
+                            record.create_time = payload.create_time
+                            if (!record.deleted) {
+                                insert_doc(trie, create_doc(payload.note, '', id))
+                            }
+                            break
+                        case enum_type.RECOGNIZED:
+                            record.text = payload.text
+                            record.recognized_time = payload.recognized_time
+
+                            if (!record.deleted) {
+                                //delete_doc(trie, create_doc(record.note, '', id))
+                                insert_doc(trie, create_doc(record.note, record2search_payload(record), id))
+                            }
+                            break
+                        case enum_type.CONVERTED:
+                            record.audio_link = payload.audio_link
+                            record.converted_time = payload.converted_time
+                            break
+                        case enum_type.DELETE:
+                            record.deleted = payload.deleted
+                            record.deleted_time = payload.deleted_time
+
+                            //if (record.note !== undefined)
+                            //    delete_doc(trie, create_doc(record.note, '', id))
+                            //if (record.text !== undefined)
+                            //    delete_doc(trie, create_doc(record.note, record2search_payload(record), id))
+                            break
+                    }
+                    state.log.push(commit)
                     save(state)
-                    protocol.load_record({
-                        text: record.text,
-                        note: record.note,
-                        time: record.time
-                    })
+                    protocol.load_record(commit)
                 }
             )
         )
 )
 
 onmessage = protocol
-    .on_create_record(({file, note}) => send({file, note}))
-    .on_delete_record(id =>
-        load().then(state => {
-            const record = state.records[id]
-            state.records.splice(id, 1)
-            delete_doc(state.trie, create_doc(record.note, record2search_payload(record), id))
-            save(state)
+    .on_create_record(payload =>
+        send({
+            type: enum_type.CREATE,
+            payload
+        })
+    )
+    .on_delete_record(payload =>
+        send({
+            type: enum_type.DELETE,
+            payload
         })
     )
     .on_search_request(request =>
         load().then(state =>
             protocol.search_response(autosubmit(state.trie, request))
-        )
-    )
-    .on_audio_request(id =>
-        load().then(state =>
-            protocol.audio_response({
-                file: state.records[id].file,
-                id
-            })
         )
     )
     .onmessage

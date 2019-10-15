@@ -1,36 +1,13 @@
-body {
-    margin: auto;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    user-select: none;
-    overflow-x: hidden;
-    font-family: sans-serif;
-}
 #selector {
     display: flex;
 }
-
-#main {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
+table {
     width: 100%;
 }
-#view {
-    display: flex;
-    flex-direction: column;
+#main {
     width: 100%;
-    transition: all 0.3s ease-in;
 }
 .record {
-    height: 100px;
-    margin: 20px 20px;
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    flex-direction: row;
-    justify-content: space-around;
 }
 .record:hover {
     box-shadow: 0 0 1px;
@@ -40,7 +17,13 @@ body {
 .record.hide {
     display: none;
 }
-
+td {
+    min-width: 60px;
+    margin: 10px 10px;
+}
+th {
+    text-align: left;
+}
 .record .revert {
     display: none;
     order: 7;
@@ -123,40 +106,9 @@ body {
 .record.edit .input-email.error {
     border-color: red;
 }
-.record.edit .email {
-    display: none;
-}
-.record .select-country {
-    display: none;
-    order: 5;
-}
-.record .country {
-    order: 5;
-}
-.record.edit .select-country {
-    display: block;
-}
-.record.edit .select-country.error {
-    border-color: red;
-}
-.record.edit .country {
-    display: none;
-}
-#view.edit .record .remove {
-    display: block;
-}
-#view.edit .record .edit {
-    display: block;
-}
-.record .edit {
-    display: none;
-    order: 8;
-}
-.record .face {
-    order: 1;
-}
+
 #edit {
-    background-color: lightblue;
+    background-color: lightgrey;
     margin-top: 3%;
     position: relative;
     width: 100%;
@@ -171,17 +123,9 @@ body {
 #view.edit .record .edit {
     display: block;
 }
-#first-name, #last-name, #email {
-    height: 40px;
-    width: 100%;
-    padding: 10px 10px;
-    margin: 30px 30px;
-    font-size: 22px;
-}
-#first-name.error, #last-name.error, #email.error, #countries.error {
-    border-color: red;
-}
+
 #submit {
+    font-size: 24px;
     margin: 30px 30px;
 }
 #submit.disable {
@@ -189,14 +133,7 @@ body {
     color: grey;
 }
 #submit:hover {
-    color: green;
     cursor: pointer;
-}
-#countries {
-    font-size: 22px;
-    border-top-right-radius: 30px;
-    min-height: 60px;
-    background-color: white;
 }
 
 #header {
@@ -223,26 +160,7 @@ input[type=text]:focus {
 #search_container i {
     font-size: 48px;
 }
-#countries {
-    font-size: 22px;
-    border-top-right-radius: 30px
-}
-#countries:focus {
-    outline: none;
-}
 
-#caption, #caption:hover {
-    border-style: none !important;
-    font-size: 25px !important;
-    font-weight: bold !important;
-    color: lightgrey !important;
-    box-shadow: none !important;
-    background-color: none !important;
-    pointer-events: none !important;
-}
-#caption.hide {
-    display: none;
-}
 
 .error-msg {
     color: red;
@@ -258,40 +176,6 @@ input[type=text]:focus {
     display: block;
 }
 
-#add-caption {
-    position: absolute;
-    left: 2%;
-    top: -20%;
-    width: 98%;
-    height: 20%;
-    font-size: small;
-}
-
-#_player_container {
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    height: 10%;
-    left: 0;
-    background-color: lightblue;
-    display: flex;
-    align-items: center;
-    justify-content: space-around;
-
-}
-
-#_dialog {
-    background-color: white;
-    position: relative;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: none;
-    flex-direction: column;
-    justify-content: flex-start;
-}
-
 .speach {
     margin: 20px 20px;
     padding: 20px 20px;
@@ -300,12 +184,10 @@ input[type=text]:focus {
     border-color: grey;
 }
 
-#_dialog.opened {
-    display: flex;
-}
-
 .note {
-    font-size: 18px;
+
+}
+#_note {
+    font-size: 24px;
     font-weight: bold;
-    color: grey;
 }

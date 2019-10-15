@@ -22,4 +22,5 @@ module.exports = cb =>
                     : init(cb)
         : init(cb)
 
-module.exports.RECORDS = 'RECORDS3'
+module.exports.LOG = 'SPEACH2TEXT:LIST-COMMIT-LOG_____'
+module.exports.FILES = 'SPEACH2TEXT:HSET-AUDIO-FILES_____'
